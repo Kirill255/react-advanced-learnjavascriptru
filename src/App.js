@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-import { Route, NavLink } from "react-router-dom";
+import { Route, NavLink, Link } from "react-router-dom";
+import { connect } from "react-redux";
+import { moduleName, signOut } from "./ducks/auth";
 import AdminPage from "./components/routes/AdminPage";
 import PersonPage from "./components/routes/PersonPage";
 import AuthPage from "./components/routes/AuthPage";
@@ -7,6 +9,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 class App extends Component {
   render() {
+    const { signOut, signedIn } = this.props;
+
+    const btn = signedIn ? (
+      <button onClick={signOut}>Sign Out</button>
+    ) : (
+      <Link to="/auth/signin">Sign In</Link>
+    );
+
     return (
       <div>
         <h1>Hello world</h1>
@@ -27,6 +37,7 @@ class App extends Component {
             </NavLink>
           </li>
         </ul>
+        {btn}
         <ProtectedRoute path="/admin" component={AdminPage} />
         <ProtectedRoute path="/people" component={PersonPage} />
         <Route path="/auth" component={AuthPage} />
@@ -35,4 +46,11 @@ class App extends Component {
   }
 }
 
-export default App;
+export default connect(
+  (state) => ({
+    signedIn: !!state[moduleName].user
+  }),
+  { signOut },
+  null,
+  { pure: false }
+)(App);

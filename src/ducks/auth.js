@@ -2,7 +2,8 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import { Record } from "immutable";
-import { all, cps, call, put, take } from "redux-saga/effects";
+import { all, cps, call, put, take, takeEvery } from "redux-saga/effects";
+import { push } from "connected-react-router";
 import { appName } from "../config";
 // import store from "../redux"; // подключили внизу внутри функции onAuthStateChanged(), потому что были проблемы из-за циклических зависимостей
 
@@ -17,6 +18,8 @@ export const SIGN_UP_REQUEST = `${appName}/${moduleName}/SIGN_UP_REQUEST`;
 export const SIGN_UP_SUCCESS = `${appName}/${moduleName}/SIGN_UP_SUCCESS`;
 export const SIGN_UP_ERROR = `${appName}/${moduleName}/SIGN_UP_ERROR`;
 export const SIGN_IN_SUCCESS = `${appName}/${moduleName}/SIGN_IN_SUCCESS`;
+export const SIGN_OUT_REQUEST = `${appName}/${moduleName}/SIGN_OUT_REQUEST`;
+export const SIGN_OUT_SUCCESS = `${appName}/${moduleName}/SIGN_OUT_SUCCESS`;
 
 export default (state = new ReducerRecord(), action) => {
   const { type, payload, error } = action;
@@ -34,6 +37,9 @@ export default (state = new ReducerRecord(), action) => {
 
     case SIGN_UP_ERROR:
       return state.set("loading", false).set("error", error);
+
+    case SIGN_OUT_SUCCESS:
+      return new ReducerRecord();
 
     default:
       return state;
@@ -132,7 +138,29 @@ export const watchStatusChange = function*() {
   }
 };
 
+export const signOut = () => {
+  return {
+    type: SIGN_OUT_REQUEST
+  };
+};
+
+export const signOutSaga = function*() {
+  const auth = firebase.auth();
+
+  try {
+    yield call([auth, auth.signOut]);
+
+    yield put({
+      type: SIGN_OUT_SUCCESS
+    });
+
+    yield put(push("/auth/signin"));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 // общая сага, другой вариант использования, напишем свою самостоятельную сагу и вызываем её
 export const saga = function*() {
-  yield all([signUpSaga(), watchStatusChange()]);
+  yield all([signUpSaga(), watchStatusChange(), takeEvery(SIGN_OUT_REQUEST, signOutSaga)]);
 };
