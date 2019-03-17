@@ -6,6 +6,10 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 https://github.com/romabelka/advreact_21_08
 
+## Redux-saga
+
+https://redux-saga.js.org/docs/basics/DeclarativeEffects.html
+
 ## Firebase
 
 https://firebase.google.com/docs/web/setup

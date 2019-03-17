@@ -2,6 +2,7 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import { Record } from "immutable";
+import { all, call, put, take } from "redux-saga/effects";
 import { appName } from "../config";
 // import store from "../redux"; // подключили внизу внутри функции onAuthStateChanged(), потому что были проблемы из-за циклических зависимостей
 
@@ -39,6 +40,8 @@ export default (state = new ReducerRecord(), action) => {
   }
 };
 
+/*
+// action with thunk
 export const signUp = (email, password) => (dispatch) => {
   dispatch({
     type: SIGN_UP_REQUEST
@@ -60,6 +63,44 @@ export const signUp = (email, password) => (dispatch) => {
       })
     );
 };
+*/
+
+// чистый action
+export const signUp = (email, password) => {
+  return {
+    type: SIGN_UP_REQUEST,
+    payload: { email, password }
+  };
+};
+
+// вспомогательная самостоятельная сага
+export const signUpSaga = function*() {
+  const auth = firebase.auth(); // сохраняем контекст, т.к. у нас метод createUserWithEmailAndPassword() вызывается вот так firebase.auth().createUserWithEmailAndPassword(email, password), тоесть мы должны вызвать его в правильном контексте
+
+  // цикл нужен чтобы сага выполнялась на каждый SIGN_UP_REQUEST, а не только один раз, т.к. мы используем take, а не takeEvery
+  while (true) {
+    const action = yield take(SIGN_UP_REQUEST); // реагируем только на SIGN_UP_REQUEST action, а например take("*");  - это реагировать на все
+
+    // вызываем createUserWithEmailAndPassword в контексте auth, и передаём аргументы email и password, вот так call([context, method], arg1, arg2, ...), ещё есть apply(obj, obj.method, [arg1, arg2, ...])
+    try {
+      const user = yield call(
+        [auth, auth.createUserWithEmailAndPassword],
+        action.payload.email,
+        action.payload.password
+      );
+
+      yield put({
+        type: SIGN_UP_SUCCESS,
+        payload: { user }
+      });
+    } catch (error) {
+      yield put({
+        type: SIGN_UP_ERROR,
+        error
+      });
+    }
+  }
+};
 
 // auto sign in
 firebase.auth().onAuthStateChanged((user) => {
@@ -73,3 +114,8 @@ firebase.auth().onAuthStateChanged((user) => {
     });
   }
 });
+
+// общая сага, другой вариант использования, напишем свою самостоятельную сагу и вызываем её
+export const saga = function*() {
+  yield all([signUpSaga()]);
+};

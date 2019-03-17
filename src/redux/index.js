@@ -5,7 +5,7 @@ import createSagaMiddleware from "redux-saga";
 import logger from "redux-logger";
 import reducer from "./reducer";
 import history from "../history";
-import { saga } from "../ducks/people";
+import rootSaga from "./saga";
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -15,7 +15,7 @@ const store = createStore(reducer, enhancer);
 
 window.store = store;
 
-sagaMiddleware.run(saga);
+sagaMiddleware.run(rootSaga);
 
 export default store;
 
