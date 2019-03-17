@@ -2,7 +2,7 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import { Record } from "immutable";
-import { all, call, put, take } from "redux-saga/effects";
+import { all, cps, call, put, take } from "redux-saga/effects";
 import { appName } from "../config";
 // import store from "../redux"; // подключили внизу внутри функции onAuthStateChanged(), потому что были проблемы из-за циклических зависимостей
 
@@ -102,6 +102,7 @@ export const signUpSaga = function*() {
   }
 };
 
+/*
 // auto sign in
 firebase.auth().onAuthStateChanged((user) => {
   const store = require("../redux").default;
@@ -114,8 +115,24 @@ firebase.auth().onAuthStateChanged((user) => {
     });
   }
 });
+*/
+
+export const watchStatusChange = function*() {
+  const auth = firebase.auth();
+
+  // call расчитывает что на выходе будет promise и он подождёт ывполнения этого промиса, а cps позволяет работать с коллбэками в нодовском стиле, тоесть первым аргументом ожидается ошибка, но метод onAuthStateChanged() всегда возвращает только один аргумент(user'a), нода сочтёт этот аргумент как ошибку(на самом деле там будет user) и пробросит в catch, собственно в блоке catch мы и задиспатчим action SIGN_IN_SUCCESS
+  // этот вариант просто для примера!!!, по-хорошему так делать не стоит, но такая возможность есть
+  try {
+    yield cps([auth, auth.onAuthStateChanged]);
+  } catch (user) {
+    yield put({
+      type: SIGN_IN_SUCCESS,
+      payload: { user }
+    });
+  }
+};
 
 // общая сага, другой вариант использования, напишем свою самостоятельную сагу и вызываем её
 export const saga = function*() {
-  yield all([signUpSaga()]);
+  yield all([signUpSaga(), watchStatusChange()]);
 };
