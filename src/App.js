@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Route, Link } from "react-router-dom";
+import { Route, NavLink } from "react-router-dom";
 import AdminPage from "./components/routes/AdminPage";
 import AuthPage from "./components/routes/AuthPage";
 
@@ -10,10 +10,14 @@ class App extends Component {
         <h1>Hello world</h1>
         <ul>
           <li>
-            <Link to="/admin">Admin</Link>
+            <NavLink to="/admin" activeStyle={{ color: "red" }}>
+              Admin
+            </NavLink>
           </li>
           <li>
-            <Link to="/auth">Auth</Link>
+            <NavLink to="/auth" activeStyle={{ color: "red" }}>
+              Auth
+            </NavLink>
           </li>
         </ul>
         <Route path="/admin" component={AdminPage} />

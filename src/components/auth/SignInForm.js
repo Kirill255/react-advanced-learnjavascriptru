@@ -2,16 +2,13 @@ import React, { Component } from "react";
 import { Field, reduxForm } from "redux-form";
 
 class SignInForm extends Component {
-  handleSubmit = (event) => {
-    event.preventDefault();
-    console.log("submit");
-  };
-
   render() {
+    const { handleSubmit } = this.props;
+
     return (
       <div>
         <h2>Sign In</h2>
-        <form onSubmit={this.handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email">Email</label>
             <Field id="email" name="email" component="input" type="email" />
@@ -31,3 +28,8 @@ class SignInForm extends Component {
 export default reduxForm({
   form: "auth"
 })(SignInForm);
+
+/*
+<SignInForm onSubmit={this.handleSignIn} />
+redux-form оборачивает props onSubmit, который мы передали в форму, и возвращает props handleSubmit, который теперь доступен как this.props.handleSubmit
+*/
