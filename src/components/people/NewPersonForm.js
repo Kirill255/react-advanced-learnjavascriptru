@@ -3,8 +3,16 @@ import { Field, reduxForm } from "redux-form";
 import emailValidator from "email-validator";
 import CustomField from "../common/CustomField";
 
-const validate = ({ email, password }) => {
+const validate = ({ firstName, lastName, email }) => {
   const errors = {};
+
+  if (!firstName) {
+    errors.firstName = "FirstName is required";
+  }
+
+  if (!lastName) {
+    errors.lastName = "LastName is required";
+  }
 
   if (!email) {
     errors.email = "Email is required";
@@ -12,25 +20,19 @@ const validate = ({ email, password }) => {
     errors.email = "Invalid email";
   }
 
-  if (!password) {
-    errors.password = "Password is required";
-  } else if (password.length < 6) {
-    errors.password = "To short";
-  }
-
   return errors;
 };
 
-class SignUpForm extends Component {
+class NewPersonForm extends Component {
   render() {
     const { handleSubmit } = this.props;
 
     return (
       <div>
-        <h2>Sign Up</h2>
         <form onSubmit={handleSubmit}>
+          <Field id="firstName" name="firstName" component={CustomField} type="text" />
+          <Field id="lastName" name="lastName" component={CustomField} type="text" />
           <Field id="email" name="email" component={CustomField} type="email" />
-          <Field id="password" name="password" component={CustomField} type="password" />
 
           <button type="submit">Submit</button>
         </form>
@@ -40,6 +42,6 @@ class SignUpForm extends Component {
 }
 
 export default reduxForm({
-  form: "auth",
+  form: "person",
   validate
-})(SignUpForm);
+})(NewPersonForm);

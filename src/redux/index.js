@@ -16,3 +16,4 @@ export default store;
 // browser console
 // store.getState().auth.user
 // store.getState().auth.toJS()
+// store.getState().people.toJS()
