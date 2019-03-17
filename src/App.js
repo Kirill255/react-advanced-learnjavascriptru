@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Route, NavLink } from "react-router-dom";
 import AdminPage from "./components/routes/AdminPage";
 import AuthPage from "./components/routes/AuthPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 class App extends Component {
   render() {
@@ -20,7 +21,7 @@ class App extends Component {
             </NavLink>
           </li>
         </ul>
-        <Route path="/admin" component={AdminPage} />
+        <ProtectedRoute path="/admin" component={AdminPage} />
         <Route path="/auth" component={AuthPage} />
       </div>
     );
