@@ -6,6 +6,16 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 https://github.com/romabelka/advreact_21_08
 
+## Firebase
+
+https://firebase.google.com/docs/web/setup
+
+https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuthWeakPasswordException
+
+## Other
+
+https://github.com/erikras/ducks-modular-redux
+
 ## HT
 
 ##HT1.1 Сделать форму для добавления людей(firstName, lastName, email) с валидацией, по /people роуту ##HT1.2 добавлять их в редакс-стор ##HT1.3 Создать собственный проект на firebase и использовать его в своих ДЗ

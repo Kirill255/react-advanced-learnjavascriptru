@@ -12,3 +12,7 @@ const store = createStore(reducer, enhancer);
 window.store = store;
 
 export default store;
+
+// browser console
+// store.getState().auth.user
+// store.getState().auth.toJS()
