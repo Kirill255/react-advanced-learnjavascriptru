@@ -12,6 +12,8 @@ https://firebase.google.com/docs/web/setup
 
 https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuthWeakPasswordException
 
+https://firebase.google.com/docs/auth/web/start#set_an_authentication_state_observer_and_get_user_data
+
 ## Other
 
 https://github.com/erikras/ducks-modular-redux
