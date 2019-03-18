@@ -2,12 +2,12 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import { Record } from "immutable";
-import { all, cps, call, put, take, takeEvery } from "redux-saga/effects";
+import { all, cps, call, apply, put, take, takeEvery } from "redux-saga/effects";
 import { push } from "connected-react-router";
 import { appName } from "../config";
 // import store from "../redux"; // подключили внизу внутри функции onAuthStateChanged(), потому что были проблемы из-за циклических зависимостей
 
-const ReducerRecord = Record({
+export const ReducerRecord = Record({
   user: null,
   error: null,
   loading: false
@@ -17,7 +17,9 @@ export const moduleName = "auth";
 export const SIGN_UP_REQUEST = `${appName}/${moduleName}/SIGN_UP_REQUEST`;
 export const SIGN_UP_SUCCESS = `${appName}/${moduleName}/SIGN_UP_SUCCESS`;
 export const SIGN_UP_ERROR = `${appName}/${moduleName}/SIGN_UP_ERROR`;
+export const SIGN_IN_REQUEST = `${appName}/${moduleName}/SIGN_IN_REQUEST`;
 export const SIGN_IN_SUCCESS = `${appName}/${moduleName}/SIGN_IN_SUCCESS`;
+export const SIGN_IN_ERROR = `${appName}/${moduleName}/SIGN_IN_ERROR`;
 export const SIGN_OUT_REQUEST = `${appName}/${moduleName}/SIGN_OUT_REQUEST`;
 export const SIGN_OUT_SUCCESS = `${appName}/${moduleName}/SIGN_OUT_SUCCESS`;
 
@@ -26,6 +28,7 @@ export default (state = new ReducerRecord(), action) => {
 
   switch (type) {
     case SIGN_UP_REQUEST:
+    case SIGN_IN_REQUEST:
       return state.set("loading", true);
 
     // case SIGN_UP_SUCCESS: теперь нам достаточно реагировать только на SIGN_IN_SUCCESS, потому что мы подписались на onAuthStateChanged(), после успешного SIGN_UP_SUCCESS у нас изменится состояние пользователя в firebase, и вызовется onAuthStateChanged() в котором диспатчится SIGN_IN_SUCCESS
@@ -36,6 +39,7 @@ export default (state = new ReducerRecord(), action) => {
         .set("error", null);
 
     case SIGN_UP_ERROR:
+    case SIGN_IN_ERROR:
       return state.set("loading", false).set("error", error);
 
     case SIGN_OUT_SUCCESS:
@@ -108,6 +112,40 @@ export const signUpSaga = function*() {
   }
 };
 
+// чистый action
+export const signIn = (email, password) => {
+  return {
+    type: SIGN_IN_REQUEST,
+    payload: { email, password }
+  };
+};
+
+// вспомогательная самостоятельная сага
+export const signInSaga = function*() {
+  const auth = firebase.auth();
+
+  while (true) {
+    const action = yield take(SIGN_IN_REQUEST);
+
+    try {
+      const user = yield apply(auth, auth.signInWithEmailAndPassword, [
+        action.payload.email,
+        action.payload.password
+      ]);
+
+      yield put({
+        type: SIGN_IN_SUCCESS,
+        payload: { user }
+      });
+    } catch (error) {
+      yield put({
+        type: SIGN_IN_ERROR,
+        error
+      });
+    }
+  }
+};
+
 /*
 // auto sign in
 firebase.auth().onAuthStateChanged((user) => {
@@ -162,5 +200,10 @@ export const signOutSaga = function*() {
 
 // общая сага, другой вариант использования, напишем свою самостоятельную сагу и вызываем её
 export const saga = function*() {
-  yield all([signUpSaga(), watchStatusChange(), takeEvery(SIGN_OUT_REQUEST, signOutSaga)]);
+  yield all([
+    signUpSaga(),
+    signInSaga(),
+    watchStatusChange(),
+    takeEvery(SIGN_OUT_REQUEST, signOutSaga)
+  ]);
 };

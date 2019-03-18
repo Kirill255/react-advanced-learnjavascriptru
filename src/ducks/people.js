@@ -1,5 +1,6 @@
 import { Record, List } from "immutable";
 import { put, call, takeEvery } from "redux-saga/effects";
+import { reset } from "redux-form";
 import { appName } from "../config";
 import { generateId } from "./utils";
 
@@ -59,6 +60,8 @@ export const addPersonSaga = function*(action) {
     type: ADD_PERSON,
     payload: { ...action.payload, id }
   });
+
+  yield put(reset("person"));
 };
 
 // общая сага

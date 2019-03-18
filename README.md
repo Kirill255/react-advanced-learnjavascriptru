@@ -10,6 +10,10 @@ https://github.com/romabelka/advreact_21_08
 
 https://redux-saga.js.org/docs/basics/DeclarativeEffects.html
 
+## Redux-form
+
+https://redux-form.com/6.0.0-alpha.6/docs/faq/howtoclear.md
+
 ## Firebase
 
 https://firebase.google.com/docs/web/setup
