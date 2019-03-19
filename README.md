@@ -24,6 +24,10 @@ https://firebase.google.com/docs/auth/web/start#set_an_authentication_state_obse
 
 https://firebase.google.com/docs/auth/web/password-auth
 
+https://firebase.google.com/docs/database/web/lists-of-data
+
+https://firebase.google.com/docs/database/admin/save-data
+
 ## Other
 
 https://github.com/erikras/ducks-modular-redux

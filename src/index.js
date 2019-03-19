@@ -7,6 +7,7 @@ import history from "./history";
 import "./index.css";
 import App from "./App";
 import "./config"; // initializeApp
+// import "./mocks"; // подключили временно чтобы инициализировать начальные данные, по идее после инициализации можно вообще удалить и подключение и папку mocks
 import * as serviceWorker from "./serviceWorker";
 
 ReactDOM.render(
