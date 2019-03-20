@@ -1,13 +1,13 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { moduleName, fetchAll, selectEvent, eventListSelector } from "../../ducks/events";
-import Loader from "../common/Loader";
-import { Column, Table } from "react-virtualized";
+import { moduleName, fetchLazy, selectEvent, eventListSelector } from "../../ducks/events";
+// import Loader from "../common/Loader";
+import { Column, Table, InfiniteLoader } from "react-virtualized";
 import "react-virtualized/styles.css";
 
 export class EventList extends Component {
   componentDidMount() {
-    this.props.fetchAll();
+    this.props.fetchLazy();
   }
 
   rowGetter = ({ index }) => {
@@ -19,26 +19,43 @@ export class EventList extends Component {
     selectEvent && selectEvent(rowData.uid);
   };
 
-  render() {
-    const { loading, events } = this.props;
+  isRowLoaded = ({ index }) => index < this.props.events.length;
 
-    if (loading) return <Loader />;
+  loadMoreRows = () => {
+    console.log("---", "load more");
+    this.props.fetchLazy();
+  };
+
+  render() {
+    const { loaded, events } = this.props;
+
+    // if (loading) return <Loader />;
 
     return (
-      <Table
-        rowCount={events.length}
-        rowGetter={this.rowGetter}
-        rowHeight={40}
-        headerHeight={50}
-        overscanRowCount={5}
-        width={700}
-        height={300}
-        onRowClick={this.handleRowClick}
+      <InfiniteLoader
+        isRowLoaded={this.isRowLoaded}
+        rowCount={loaded ? events.length : events.length + 1}
+        loadMoreRows={this.loadMoreRows}
       >
-        <Column label="title" dataKey="title" width={300} />
-        <Column label="where" dataKey="where" width={250} />
-        <Column label="when" dataKey="month" width={150} />
-      </Table>
+        {({ onRowsRendered, registerChild }) => (
+          <Table
+            ref={registerChild}
+            rowCount={events.length}
+            rowGetter={this.rowGetter}
+            rowHeight={40}
+            headerHeight={50}
+            overscanRowCount={5}
+            width={700}
+            height={300}
+            onRowClick={this.handleRowClick}
+            onRowsRendered={onRowsRendered}
+          >
+            <Column label="title" dataKey="title" width={300} />
+            <Column label="where" dataKey="where" width={250} />
+            <Column label="when" dataKey="month" width={150} />
+          </Table>
+        )}
+      </InfiniteLoader>
     );
   }
 }
@@ -46,7 +63,8 @@ export class EventList extends Component {
 export default connect(
   (state) => ({
     events: eventListSelector(state),
-    loading: state[moduleName].loading
+    // loading: state[moduleName].loading
+    loaded: state[moduleName].loaded
   }),
-  { fetchAll, selectEvent }
+  { fetchLazy, selectEvent }
 )(EventList);

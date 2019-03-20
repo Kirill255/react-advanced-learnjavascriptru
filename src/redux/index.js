@@ -26,3 +26,4 @@ export default store;
 // store.getState().people.entities.toJS()
 // store.getState().events.entities.toJS()
 // store.getState().events.selected.toJS()
+// store.getState().events.entities.size
