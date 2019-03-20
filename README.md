@@ -28,6 +28,16 @@ https://firebase.google.com/docs/database/web/lists-of-data
 
 https://firebase.google.com/docs/database/admin/save-data
 
+## Tests
+
+https://facebook.github.io/create-react-app/docs/running-tests
+
+https://github.com/airbnb/enzyme
+
+https://airbnb.io/enzyme/docs/api/shallow
+
+https://airbnb.io/enzyme/docs/guides/migration-from-2-to-3.html#lifecycle-methods
+
 ## Other
 
 https://github.com/erikras/ducks-modular-redux
