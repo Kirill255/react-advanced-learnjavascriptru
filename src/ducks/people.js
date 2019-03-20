@@ -1,36 +1,86 @@
-import { Record, List } from "immutable";
-import { put, call, takeEvery } from "redux-saga/effects";
+import firebase from "firebase/app";
+import "firebase/database";
+import { Record, OrderedMap } from "immutable";
+import { put, call, takeEvery, all } from "redux-saga/effects";
 import { reset } from "redux-form";
+import { createSelector } from "reselect";
 import { appName } from "../config";
-import { generateId } from "./utils";
+import { fbDatatoEntities } from "./utils";
 
+/**
+ * Constants
+ * */
+export const moduleName = "people";
+const prefix = `${appName}/${moduleName}`;
+
+export const FETCH_ALL_REQUEST = `${prefix}/FETCH_ALL_REQUEST`;
+export const FETCH_ALL_SUCCESS = `${prefix}/FETCH_ALL_SUCCESS`;
+export const FETCH_ALL_ERROR = `${prefix}/FETCH_ALL_ERROR`;
+export const ADD_PERSON_REQUEST = `${prefix}/ADD_PERSON_REQUEST`;
+export const ADD_PERSON_SUCCESS = `${prefix}/ADD_PERSON_SUCCESS`;
+export const ADD_PERSON_ERROR = `${prefix}/ADD_PERSON_ERROR`;
+
+/**
+ * Reducer
+ * */
 const ReducerState = Record({
-  entities: new List([])
+  entities: new OrderedMap({}),
+  loading: false,
+  error: null
 });
 
 const PersonRecord = Record({
-  id: null,
+  uid: null,
   firstName: null,
   lastName: null,
   email: null
 });
 
-export const moduleName = "people";
-const prefix = `${appName}/${moduleName}`;
-export const ADD_PERSON = `${prefix}/ADD_PERSON`;
-export const ADD_PERSON_REQUEST = `${prefix}/ADD_PERSON_REQUEST`;
-
 export default (state = new ReducerState(), action) => {
-  const { type, payload } = action;
+  const { type, payload, error } = action;
 
   switch (type) {
-    case ADD_PERSON:
-      return state.update("entities", (entities) => entities.push(new PersonRecord(payload)));
+    case FETCH_ALL_REQUEST:
+    case ADD_PERSON_REQUEST:
+      return state.set("loading", true);
+
+    case ADD_PERSON_SUCCESS:
+      return state
+        .set("loading", false)
+        .setIn(["entities", payload.uid], new PersonRecord(payload))
+        .set("error", null);
+
+    case FETCH_ALL_SUCCESS:
+      return state
+        .set("loading", false)
+        .set("entities", fbDatatoEntities(payload, PersonRecord))
+        .set("error", null);
+
+    case FETCH_ALL_ERROR:
+    case ADD_PERSON_ERROR:
+      return state.set("loading", false).set("error", error);
 
     default:
       return state;
   }
 };
+
+/**
+ * Selectors
+ * */
+export const stateSelector = (state) => state[moduleName];
+export const entitiesSelector = createSelector(
+  stateSelector,
+  (state) => state.entities
+);
+export const peopleListSelector = createSelector(
+  entitiesSelector,
+  (entities) => entities.valueSeq().toArray()
+);
+
+/**
+ * Action Creators
+ * */
 
 /*
 // кстати сдесь thunk нужен потому что id: Date.now() считается сайд-эффектом
@@ -52,20 +102,60 @@ export const addPerson = (person) => {
   };
 };
 
+export const fetchAllPeople = () => {
+  return {
+    type: FETCH_ALL_REQUEST
+  };
+};
+
+/**
+ * Sagas
+ * */
+
 // вспомогательная сага, в которой мы добавляем сайд-эффект
 export const addPersonSaga = function*(action) {
-  const id = yield call(generateId);
+  const peopleRef = firebase.database().ref("people");
 
-  yield put({
-    type: ADD_PERSON,
-    payload: { ...action.payload, id }
-  });
+  try {
+    const ref = yield call([peopleRef, peopleRef.push], action.payload);
 
-  yield put(reset("person"));
+    yield put({
+      type: ADD_PERSON_SUCCESS,
+      payload: { ...action.payload, uid: ref.key }
+    });
+
+    yield put(reset("person"));
+  } catch (error) {
+    yield put({
+      type: ADD_PERSON_ERROR,
+      error
+    });
+  }
+};
+
+export const fetchAllSaga = function*() {
+  const peopleRef = firebase.database().ref("people");
+
+  try {
+    const data = yield call([peopleRef, peopleRef.once], "value");
+
+    yield put({
+      type: FETCH_ALL_SUCCESS,
+      payload: data.val()
+    });
+  } catch (error) {
+    yield put({
+      type: FETCH_ALL_ERROR,
+      error
+    });
+  }
 };
 
 // общая сага
 // каждый раз когда происходит action ADD_PERSON_REQUEST, выполнять addPersonSaga сагу
 export const saga = function*() {
-  yield takeEvery(ADD_PERSON_REQUEST, addPersonSaga);
+  yield all([
+    takeEvery(ADD_PERSON_REQUEST, addPersonSaga),
+    takeEvery(FETCH_ALL_REQUEST, fetchAllSaga)
+  ]);
 };
