@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { Table, Column } from "react-virtualized";
 import { peopleListSelector, fetchAllPeople } from "../../ducks/people";
 
-export class PeopleList extends Component {
+export class PeopleTable extends Component {
   componentDidMount() {
     this.props.fetchAllPeople && this.props.fetchAllPeople();
   }
@@ -35,4 +35,4 @@ export default connect(
     people: peopleListSelector(state)
   }),
   { fetchAllPeople }
-)(PeopleList);
+)(PeopleTable);

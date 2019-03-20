@@ -1,6 +1,6 @@
 import React from "react";
 import { mount } from "enzyme";
-import { PeopleList } from "./PeopleList";
+import { PeopleTable } from "./PeopleTable";
 
 const generateList = (length) => {
   const arr = [];
@@ -15,11 +15,11 @@ const generateList = (length) => {
   return arr;
 };
 
-describe("EventList test", () => {
+describe("PeopleTable test", () => {
   it("should be render all items from short list", () => {
     const shortList = generateList(5);
 
-    const container = mount(<PeopleList people={shortList} />);
+    const container = mount(<PeopleTable people={shortList} />);
     const rows = container.find(".test--people-list__row");
 
     expect(rows.length).toEqual(shortList.length + 1);
@@ -28,13 +28,13 @@ describe("EventList test", () => {
   it("should be render a part of long list", () => {
     const longList = generateList(200);
 
-    const container = mount(<PeopleList people={longList} />);
+    const container = mount(<PeopleTable people={longList} />);
     const rows = container.find(".test--people-list__row");
 
     expect(rows.length).toEqual(10);
   });
 
   it("should be request fetching", (done) => {
-    mount(<PeopleList people={[]} fetchAllPeople={done} />);
+    mount(<PeopleTable people={[]} fetchAllPeople={done} />);
   });
 });

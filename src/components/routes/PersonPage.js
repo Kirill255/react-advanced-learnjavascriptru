@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import { addPerson, moduleName } from "../../ducks/people";
 import NewPersonForm from "../people/NewPersonForm";
-import PeopleList from "../people/PeopleList";
+import PeopleTable from "../people/PeopleTable";
 import Loader from "../common/Loader";
 
 class PersonPage extends Component {
@@ -13,7 +13,7 @@ class PersonPage extends Component {
       <div>
         <h2>Add new person</h2>
         {loading ? <Loader /> : <NewPersonForm onSubmit={addPerson} />}
-        <PeopleList />
+        <PeopleTable />
       </div>
     );
   }
