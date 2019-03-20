@@ -24,3 +24,4 @@ export default store;
 // store.getState().auth.toJS()
 // store.getState().people.toJS()
 // store.getState().people.entities.toJS()
+// store.getState().events.entities.toJS()
