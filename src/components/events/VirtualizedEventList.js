@@ -4,7 +4,7 @@ import { moduleName, fetchLazy, selectEvent, eventListSelector } from "../../duc
 // import Loader from "../common/Loader";
 import { Column, Table, InfiniteLoader } from "react-virtualized";
 import TableRow from "./TableRow";
-import Trash from "./Trash";
+import Trash from "../common/Trash";
 import "react-virtualized/styles.css";
 
 export class EventList extends Component {

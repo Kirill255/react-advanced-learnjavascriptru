@@ -21,6 +21,8 @@ export const ADD_PERSON_SUCCESS = `${prefix}/ADD_PERSON_SUCCESS`;
 export const ADD_PERSON_ERROR = `${prefix}/ADD_PERSON_ERROR`;
 export const ADD_EVENT_REQUEST = `${prefix}/ADD_EVENT_REQUEST`;
 export const ADD_EVENT_SUCCESS = `${prefix}/ADD_EVENT_SUCCESS`;
+export const DELETE_PERSON_REQUEST = `${prefix}/DELETE_PERSON_REQUEST`;
+export const DELETE_PERSON_SUCCESS = `${prefix}/DELETE_PERSON_SUCCESS`;
 
 /**
  * Reducer
@@ -45,6 +47,7 @@ export default (state = new ReducerState(), action) => {
   switch (type) {
     case FETCH_ALL_REQUEST:
     case ADD_PERSON_REQUEST:
+    case DELETE_PERSON_REQUEST:
       return state.set("loading", true);
 
     case ADD_PERSON_SUCCESS:
@@ -65,6 +68,9 @@ export default (state = new ReducerState(), action) => {
 
     case ADD_EVENT_SUCCESS:
       return state.setIn(["entities", payload.personUid, "events"], payload.eventUids);
+
+    case DELETE_PERSON_SUCCESS:
+      return state.set("loading", false).deleteIn(["entities", payload.uid]);
 
     default:
       return state;
@@ -124,6 +130,13 @@ export const addEventToPerson = (eventUid, personUid) => {
   return {
     type: ADD_EVENT_REQUEST,
     payload: { eventUid, personUid }
+  };
+};
+
+export const deletePerson = (uid) => {
+  return {
+    type: DELETE_PERSON_REQUEST,
+    payload: { uid }
   };
 };
 
@@ -193,12 +206,27 @@ export const addEventSaga = function*(action) {
   } catch (_) {}
 };
 
+export const deletePersonSaga = function*(action) {
+  const { payload } = action;
+  const ref = firebase.database().ref(`people/${payload.uid}`);
+
+  try {
+    yield call([ref, ref.remove]);
+
+    yield put({
+      type: DELETE_PERSON_SUCCESS,
+      payload
+    });
+  } catch (_) {}
+};
+
 // общая сага
 // каждый раз когда происходит action ADD_PERSON_REQUEST, выполнять addPersonSaga сагу
 export const saga = function*() {
   yield all([
     takeEvery(ADD_PERSON_REQUEST, addPersonSaga),
     takeEvery(FETCH_ALL_REQUEST, fetchAllSaga),
-    takeEvery(ADD_EVENT_REQUEST, addEventSaga)
+    takeEvery(ADD_EVENT_REQUEST, addEventSaga),
+    takeEvery(DELETE_PERSON_REQUEST, deletePersonSaga)
   ]);
 };

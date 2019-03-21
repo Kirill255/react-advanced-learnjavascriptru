@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import { DropTarget } from "react-dnd";
 import { connect } from "react-redux";
 import { deleteEvent, stateSelector } from "../../ducks/events";
-import Loader from "../common/Loader";
+import { deletePerson } from "../../ducks/people";
+import Loader from "./Loader";
 
 class Trash extends Component {
   render() {
@@ -28,8 +29,15 @@ class Trash extends Component {
 
 const spec = {
   drop(props, monitor) {
+    const itemACMapping = {
+      event: props.deleteEvent,
+      person: props.deletePerson
+    };
+
     const item = monitor.getItem();
-    props.deleteEvent(item.uid);
+    const itemType = monitor.getItemType();
+
+    itemACMapping[itemType](item.uid);
   }
 };
 
@@ -42,5 +50,5 @@ export default connect(
   (state) => ({
     loading: stateSelector(state).loading
   }),
-  { deleteEvent }
-)(DropTarget("event", spec, collect)(Trash));
+  { deleteEvent, deletePerson }
+)(DropTarget(["event", "person"], spec, collect)(Trash));
