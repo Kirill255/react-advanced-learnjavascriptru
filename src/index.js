@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
+import { DragDropContextProvider } from "react-dnd";
+import HTML5Backend from "react-dnd-html5-backend";
 import { ConnectedRouter } from "connected-react-router";
 import store from "./redux";
 import history from "./history";
@@ -13,7 +15,9 @@ import * as serviceWorker from "./serviceWorker";
 ReactDOM.render(
   <Provider store={store}>
     <ConnectedRouter history={history}>
-      <App />
+      <DragDropContextProvider backend={HTML5Backend}>
+        <App />
+      </DragDropContextProvider>
     </ConnectedRouter>
   </Provider>,
   document.getElementById("root")
