@@ -7,6 +7,7 @@ import PersonPage from "./components/routes/PersonPage";
 import AuthPage from "./components/routes/AuthPage";
 import EventsPage from "./components/routes/EventsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CustomDragLayer from "./components/CustomDragLayer";
 
 class App extends Component {
   render() {
@@ -48,6 +49,7 @@ class App extends Component {
         <ProtectedRoute path="/people" component={PersonPage} />
         <ProtectedRoute path="/events" component={EventsPage} />
         <Route path="/auth" component={AuthPage} />
+        <CustomDragLayer />
       </div>
     );
   }
