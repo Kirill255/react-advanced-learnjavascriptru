@@ -64,7 +64,7 @@ export default (state = new ReducerState(), action) => {
       return state.set("loading", false).set("error", error);
 
     case ADD_EVENT_SUCCESS:
-      return state.setIn(["entities", payload.personUid, "events"], payload.events);
+      return state.setIn(["entities", payload.personUid, "events"], payload.eventUids);
 
     default:
       return state;
@@ -168,15 +168,20 @@ export const addEventSaga = function*(action) {
   const { eventUid, personUid } = action.payload;
   const eventsRef = firebase.database().ref(`people/${personUid}/events`);
   const state = yield select(stateSelector);
-  const events = state.getIn(["entities", personUid, "events"]).concat(eventUid);
+  // const events = state.getIn(["entities", personUid, "events"]).concat(eventUid);
+
+  // чтобы нельзя было одного и того же человека записать на event несколько раз
+  const curEvents = state.getIn(["entities", personUid, "events"]);
+  if (curEvents.includes(eventUid)) return;
+  const eventUids = curEvents.concat(eventUid);
 
   try {
-    yield call([eventsRef, eventsRef.set], events);
+    yield call([eventsRef, eventsRef.set], eventUids);
     yield put({
       type: ADD_EVENT_SUCCESS,
       payload: {
         personUid,
-        events
+        eventUids
       }
     });
   } catch (_) {}
