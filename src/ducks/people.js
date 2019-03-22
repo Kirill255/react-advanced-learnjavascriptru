@@ -1,7 +1,7 @@
 import firebase from "firebase/app";
 import "firebase/database";
 import { Record, OrderedMap } from "immutable";
-import { put, call, takeEvery, all, select } from "redux-saga/effects";
+import { put, call, takeEvery, all, select, delay } from "redux-saga/effects";
 import { reset } from "redux-form";
 import { createSelector } from "reselect";
 import { appName } from "../config";
@@ -220,10 +220,19 @@ export const deletePersonSaga = function*(action) {
   } catch (_) {}
 };
 
+// синхронизация вкладок, обновляем стор каждые 5 сек, запрашиваем данные, ждём 5 секунд, и снова подгружаем свежие данные и т.д.
+export const backgroundSyncSaga = function*() {
+  while (true) {
+    yield call(fetchAllSaga);
+    yield delay(5000);
+  }
+};
+
 // общая сага
 // каждый раз когда происходит action ADD_PERSON_REQUEST, выполнять addPersonSaga сагу
 export const saga = function*() {
   yield all([
+    backgroundSyncSaga(),
     takeEvery(ADD_PERSON_REQUEST, addPersonSaga),
     takeEvery(FETCH_ALL_REQUEST, fetchAllSaga),
     takeEvery(ADD_EVENT_REQUEST, addEventSaga),
