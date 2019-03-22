@@ -9,11 +9,11 @@ import {
   all,
   select,
   delay,
-  /* fork, */
+  fork,
   spawn,
-  /*  cancel, */
+  cancel,
   cancelled,
-  race,
+  /* race, */
   take
 } from "redux-saga/effects";
 import { reset } from "redux-form";
@@ -248,19 +248,34 @@ export const backgroundSyncSaga = function*() {
     }
   }
 };
-
+/*
 export const cancellableSync = function*() {
-  /*
+
   const task = yield fork(backgroundSyncSaga);
   yield delay(6000);
   yield cancel(task);
-  */
+
 
   // all и race работают по аналогии с промисами, all ждёт выполнения всех саг и потом возвращает результат, а race ждёт первый вернувшийся ответ, возвращает его, а остальные саги отменяет, race это такой неявный случай использования отмены саг, а нашем случае sync: backgroundSyncSaga() это бесконечная сага, а delay: delay(6000) работает 6 секунд и когда проходит 6 cекунд у нас заканчивается delay сага, а все остальные race отменяет
   yield race({
     sync: realtimeSync(),
     delay: delay(6000)
   });
+};
+*/
+
+// подключаем сагу в зависимости от роута, если роут people - включаем realtimeSync, если нет отключаем
+export const cancellableSync = function*() {
+  let task;
+  while (true) {
+    const { payload } = yield take("@@router/LOCATION_CHANGE");
+
+    if (payload && payload.location.pathname.includes("people")) {
+      task = yield fork(realtimeSync);
+    } else if (task) {
+      yield cancel(task);
+    }
+  }
 };
 
 // просто функция, которая подписывается на изменения в базе
