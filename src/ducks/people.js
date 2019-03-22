@@ -1,7 +1,18 @@
 import firebase from "firebase/app";
 import "firebase/database";
 import { Record, OrderedMap } from "immutable";
-import { put, call, takeEvery, all, select, delay, fork, spawn, cancel } from "redux-saga/effects";
+import {
+  put,
+  call,
+  takeEvery,
+  all,
+  select,
+  delay,
+  fork,
+  spawn,
+  cancel,
+  cancelled
+} from "redux-saga/effects";
 import { reset } from "redux-form";
 import { createSelector } from "reselect";
 import { appName } from "../config";
@@ -221,10 +232,17 @@ export const deletePersonSaga = function*(action) {
 };
 
 // синхронизация вкладок, обновляем стор каждые 5 сек, запрашиваем данные, ждём 5 секунд, и снова подгружаем свежие данные и т.д.
+// если сага была отменена, то мы можем на это как-то среагировать, когда сага отменяется выбрасывается специальное исключение в той саге которая была отменена, и мы можем его поймать например в try/catch/finally, но такой блок ловит вообще любые исключения, тоесть это например может быть реально какая-то ошибка или ещё что-то, а мы хотим среагировать именно на момент отмены саги, и для это есть специальный эффект cancelled
 export const backgroundSyncSaga = function*() {
-  while (true) {
-    yield call(fetchAllSaga);
-    yield delay(2000);
+  try {
+    while (true) {
+      yield call(fetchAllSaga);
+      yield delay(2000);
+    }
+  } finally {
+    if (yield cancelled()) {
+      console.log("---", "cancelled backgroundSyncSaga saga");
+    }
   }
 };
 
