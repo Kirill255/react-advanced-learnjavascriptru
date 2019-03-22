@@ -1,7 +1,7 @@
 import firebase from "firebase/app";
 import "firebase/database";
 import { Record, OrderedMap } from "immutable";
-import { put, call, takeEvery, all, select, delay, fork, spawn } from "redux-saga/effects";
+import { put, call, takeEvery, all, select, delay, fork, spawn, cancel } from "redux-saga/effects";
 import { reset } from "redux-form";
 import { createSelector } from "reselect";
 import { appName } from "../config";
@@ -224,17 +224,20 @@ export const deletePersonSaga = function*(action) {
 export const backgroundSyncSaga = function*() {
   while (true) {
     yield call(fetchAllSaga);
-    yield delay(5000);
-
-    // throw new Error();
+    yield delay(2000);
   }
+};
+
+export const cancellableSync = function*() {
+  const task = yield fork(backgroundSyncSaga);
+  yield delay(6000);
+  yield cancel(task);
 };
 
 // общая сага
 // каждый раз когда происходит action ADD_PERSON_REQUEST, выполнять addPersonSaga сагу
 export const saga = function*() {
-  // yield fork(backgroundSyncSaga); // зависымый от родителя процесс, если в саге возникнет ошибка, то упадут все родительские саги по цепочке, тоесть если в backgroundSyncSaga будет ошибка, упадёт backgroundSyncSaga, дальше её родитель saga, если упадёт saga, то упадут все саги внутри saga addPersonSaga, fetchAllSaga, addEventSaga, deletePersonSaga, а также т.к. мы подключаем saga в рутовую сагу rootSaga, то она тоже упадёт, и т.д. такое поведение иногда оправданно, зависит от задач, просто нужно где-то обрабатывать ошибки
-  yield spawn(backgroundSyncSaga); // независимый от родителя процесс, если в backgroundSyncSaga произойдёт ошибка, то backgroundSyncSaga упадёт разумеется, но все остальные родительские саги продолжат работать, это не значит что spawn лучше чем fork, используются оба эффекта в завсисмости от задачи
+  yield spawn(cancellableSync);
 
   yield all([
     takeEvery(ADD_PERSON_REQUEST, addPersonSaga),
