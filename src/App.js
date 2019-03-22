@@ -24,6 +24,11 @@ class App extends Component {
         <h1>Hello world</h1>
         <ul>
           <li>
+            <NavLink to="/" activeStyle={{ color: "red" }} exact>
+              Home
+            </NavLink>
+          </li>
+          <li>
             <NavLink to="/admin" activeStyle={{ color: "red" }}>
               Admin
             </NavLink>
@@ -34,22 +39,24 @@ class App extends Component {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/auth" activeStyle={{ color: "red" }}>
-              Auth
-            </NavLink>
-          </li>
-          <li>
             <NavLink to="/events" activeStyle={{ color: "red" }}>
               Events
             </NavLink>
           </li>
+          {!signedIn && (
+            <li>
+              <NavLink to="/auth" activeStyle={{ color: "red" }}>
+                Auth
+              </NavLink>
+            </li>
+          )}
         </ul>
         {btn}
+        <CustomDragLayer />
         <ProtectedRoute path="/admin" component={AdminPage} />
         <ProtectedRoute path="/people" component={PersonPage} />
         <ProtectedRoute path="/events" component={EventsPage} />
         <Route path="/auth" component={AuthPage} />
-        <CustomDragLayer />
       </div>
     );
   }

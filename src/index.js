@@ -14,11 +14,11 @@ import * as serviceWorker from "./serviceWorker";
 
 ReactDOM.render(
   <Provider store={store}>
-    <ConnectedRouter history={history}>
-      <DragDropContextProvider backend={HTML5Backend}>
+    <DragDropContextProvider backend={HTML5Backend}>
+      <ConnectedRouter history={history}>
         <App />
-      </DragDropContextProvider>
-    </ConnectedRouter>
+      </ConnectedRouter>
+    </DragDropContextProvider>
   </Provider>,
   document.getElementById("root")
 );
@@ -27,3 +27,7 @@ ReactDOM.render(
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+
+/*
+ConnectedRouter лучше помещать всегда непосредственно над app без других прослоек или могут быть баги
+*/

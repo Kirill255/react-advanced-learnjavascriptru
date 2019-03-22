@@ -3,7 +3,7 @@ import firebase from "firebase/app";
 import "firebase/auth";
 import { Record } from "immutable";
 import { all, cps, call, apply, put, take, takeEvery } from "redux-saga/effects";
-import { push } from "connected-react-router";
+import { push, replace } from "connected-react-router";
 import { appName } from "../config";
 // import store from "../redux"; // подключили внизу внутри функции onAuthStateChanged(), потому что были проблемы из-за циклических зависимостей
 
@@ -32,6 +32,7 @@ export default (state = new ReducerRecord(), action) => {
       return state.set("loading", true);
 
     // case SIGN_UP_SUCCESS: теперь нам достаточно реагировать только на SIGN_IN_SUCCESS, потому что мы подписались на onAuthStateChanged(), после успешного SIGN_UP_SUCCESS у нас изменится состояние пользователя в firebase, и вызовется onAuthStateChanged() в котором диспатчится SIGN_IN_SUCCESS
+    case SIGN_UP_SUCCESS:
     case SIGN_IN_SUCCESS:
       return state
         .set("loading", false)
@@ -103,6 +104,8 @@ export const signUpSaga = function*() {
         type: SIGN_UP_SUCCESS,
         payload: { user }
       });
+
+      yield put(replace("/"));
     } catch (error) {
       yield put({
         type: SIGN_UP_ERROR,
@@ -137,6 +140,8 @@ export const signInSaga = function*() {
         type: SIGN_IN_SUCCESS,
         payload: { user }
       });
+
+      yield put(replace("/"));
     } catch (error) {
       yield put({
         type: SIGN_IN_ERROR,
@@ -173,6 +178,8 @@ export const watchStatusChange = function*() {
       type: SIGN_IN_SUCCESS,
       payload: { user }
     });
+
+    yield put(replace("/"));
   }
 };
 
