@@ -11,7 +11,8 @@ import {
   fork,
   spawn,
   cancel,
-  cancelled
+  cancelled,
+  race
 } from "redux-saga/effects";
 import { reset } from "redux-form";
 import { createSelector } from "reselect";
@@ -250,6 +251,14 @@ export const cancellableSync = function*() {
   const task = yield fork(backgroundSyncSaga);
   yield delay(6000);
   yield cancel(task);
+
+  /*
+  // all и race работают по аналогии с промисами, all ждёт выполнения всех саг и потом возвращает результат, а race ждёт первый вернувшийся ответ, возвращает его, а остальные саги отменяет, race это такой неявный случай использования отмены саг, а нашем случае sync: backgroundSyncSaga() это бесконечная сага, а delay: delay(6000) работает 6 секунд и когда проходит 6 cекунд у нас заканчивается delay сага, а все остальные race отменяет
+  yield race({
+    sync: backgroundSyncSaga(),
+    delay: delay(6000)
+  });
+  */
 };
 
 // общая сага
