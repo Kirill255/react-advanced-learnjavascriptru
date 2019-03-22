@@ -1,6 +1,7 @@
 import firebase from "firebase/app";
 import "firebase/database";
 import { Record, OrderedMap } from "immutable";
+import { eventChannel } from "redux-saga";
 import {
   put,
   call,
@@ -12,7 +13,8 @@ import {
   spawn,
   cancel,
   cancelled,
-  race
+  race,
+  take
 } from "redux-saga/effects";
 import { reset } from "redux-form";
 import { createSelector } from "reselect";
@@ -261,10 +263,37 @@ export const cancellableSync = function*() {
   */
 };
 
+// просто функция, которая подписывается на изменения в базе
+const createPeopleSocket = () =>
+  eventChannel((emmit) => {
+    const ref = firebase.database().ref("people");
+
+    // ref.on("value", (data) => {
+    //   emmit({ data });
+    // });
+
+    const callback = (data) => emmit({ data });
+    ref.on("value", callback);
+
+    return () => ref.off("value", callback);
+  });
+
+export const realtimeSync = function*() {
+  const chan = yield call(createPeopleSocket);
+  while (true) {
+    const { data } = yield take(chan);
+
+    yield put({
+      type: FETCH_ALL_SUCCESS,
+      payload: data.val()
+    });
+  }
+};
+
 // общая сага
 // каждый раз когда происходит action ADD_PERSON_REQUEST, выполнять addPersonSaga сагу
 export const saga = function*() {
-  yield spawn(cancellableSync);
+  yield spawn(realtimeSync);
 
   yield all([
     takeEvery(ADD_PERSON_REQUEST, addPersonSaga),

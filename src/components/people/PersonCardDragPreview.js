@@ -6,7 +6,7 @@ class PersonCardDragPreview extends Component {
   render() {
     return (
       <div>
-        <h1>{this.props.person.firstName}</h1>
+        <h1>{this.props.person && this.props.person.firstName}</h1>
       </div>
     );
   }
