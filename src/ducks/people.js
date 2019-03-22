@@ -9,9 +9,9 @@ import {
   all,
   select,
   delay,
-  fork,
+  /* fork, */
   spawn,
-  cancel,
+  /*  cancel, */
   cancelled,
   race,
   take
@@ -250,50 +250,53 @@ export const backgroundSyncSaga = function*() {
 };
 
 export const cancellableSync = function*() {
+  /*
   const task = yield fork(backgroundSyncSaga);
   yield delay(6000);
   yield cancel(task);
+  */
 
-  /*
   // all и race работают по аналогии с промисами, all ждёт выполнения всех саг и потом возвращает результат, а race ждёт первый вернувшийся ответ, возвращает его, а остальные саги отменяет, race это такой неявный случай использования отмены саг, а нашем случае sync: backgroundSyncSaga() это бесконечная сага, а delay: delay(6000) работает 6 секунд и когда проходит 6 cекунд у нас заканчивается delay сага, а все остальные race отменяет
   yield race({
-    sync: backgroundSyncSaga(),
+    sync: realtimeSync(),
     delay: delay(6000)
   });
-  */
 };
 
 // просто функция, которая подписывается на изменения в базе
 const createPeopleSocket = () =>
   eventChannel((emmit) => {
     const ref = firebase.database().ref("people");
-
-    // ref.on("value", (data) => {
-    //   emmit({ data });
-    // });
-
     const callback = (data) => emmit({ data });
     ref.on("value", callback);
 
-    return () => ref.off("value", callback);
+    return () => {
+      console.log("---", "unsubscribing");
+      ref.off("value", callback);
+    };
   });
 
 export const realtimeSync = function*() {
   const chan = yield call(createPeopleSocket);
-  while (true) {
-    const { data } = yield take(chan);
+  try {
+    while (true) {
+      const { data } = yield take(chan);
 
-    yield put({
-      type: FETCH_ALL_SUCCESS,
-      payload: data.val()
-    });
+      yield put({
+        type: FETCH_ALL_SUCCESS,
+        payload: data.val()
+      });
+    }
+  } finally {
+    yield call([chan, chan.close]); // chan.close отписывается от канала
+    console.log("---", "cancelled realtime saga");
   }
 };
 
 // общая сага
 // каждый раз когда происходит action ADD_PERSON_REQUEST, выполнять addPersonSaga сагу
 export const saga = function*() {
-  yield spawn(realtimeSync);
+  yield spawn(cancellableSync);
 
   yield all([
     takeEvery(ADD_PERSON_REQUEST, addPersonSaga),
