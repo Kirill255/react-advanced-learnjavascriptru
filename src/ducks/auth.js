@@ -2,7 +2,8 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import { Record } from "immutable";
-import { all, cps, call, apply, put, take, takeEvery } from "redux-saga/effects";
+import { eventChannel } from "redux-saga";
+import { all, /* cps, */ call, apply, put, take, takeEvery } from "redux-saga/effects";
 import { push, replace } from "connected-react-router";
 import { appName } from "../config";
 // import store from "../redux"; // подключили внизу внутри функции onAuthStateChanged(), потому что были проблемы из-за циклических зависимостей
@@ -32,7 +33,7 @@ export default (state = new ReducerRecord(), action) => {
       return state.set("loading", true);
 
     // case SIGN_UP_SUCCESS: теперь нам достаточно реагировать только на SIGN_IN_SUCCESS, потому что мы подписались на onAuthStateChanged(), после успешного SIGN_UP_SUCCESS у нас изменится состояние пользователя в firebase, и вызовется onAuthStateChanged() в котором диспатчится SIGN_IN_SUCCESS
-    case SIGN_UP_SUCCESS:
+    // case SIGN_UP_SUCCESS:
     case SIGN_IN_SUCCESS:
       return state
         .set("loading", false)
@@ -94,18 +95,20 @@ export const signUpSaga = function*() {
 
     // вызываем createUserWithEmailAndPassword в контексте auth, и передаём аргументы email и password, вот так call([context, method], arg1, arg2, ...), ещё есть apply(obj, obj.method, [arg1, arg2, ...])
     try {
-      const user = yield call(
+      yield call(
         [auth, auth.createUserWithEmailAndPassword],
         action.payload.email,
         action.payload.password
       );
 
+      /*
       yield put({
         type: SIGN_UP_SUCCESS,
         payload: { user }
       });
+      */
 
-      yield put(replace("/"));
+      // yield put(replace("/"));
     } catch (error) {
       yield put({
         type: SIGN_UP_ERROR,
@@ -131,17 +134,19 @@ export const signInSaga = function*() {
     const action = yield take(SIGN_IN_REQUEST);
 
     try {
-      const user = yield apply(auth, auth.signInWithEmailAndPassword, [
+      yield apply(auth, auth.signInWithEmailAndPassword, [
         action.payload.email,
         action.payload.password
       ]);
 
+      /*
       yield put({
         type: SIGN_IN_SUCCESS,
         payload: { user }
       });
+      */
 
-      yield put(replace("/"));
+      // yield put(replace("/"));
     } catch (error) {
       yield put({
         type: SIGN_IN_ERROR,
@@ -165,21 +170,30 @@ firebase.auth().onAuthStateChanged((user) => {
   }
 });
 */
+const createAuthChannel = () =>
+  eventChannel((emit) => firebase.auth().onAuthStateChanged((user) => emit({ user })));
 
 export const watchStatusChange = function*() {
-  const auth = firebase.auth();
+  const chan = yield call(createAuthChannel);
 
-  // call расчитывает что на выходе будет promise и он подождёт ывполнения этого промиса, а cps позволяет работать с коллбэками в нодовском стиле, тоесть первым аргументом ожидается ошибка, но метод onAuthStateChanged() всегда возвращает только один аргумент(user'a), нода сочтёт этот аргумент как ошибку(на самом деле там будет user) и пробросит в catch, собственно в блоке catch мы и задиспатчим action SIGN_IN_SUCCESS
-  // этот вариант просто для примера!!!, по-хорошему так делать не стоит, но такая возможность есть
-  try {
-    yield cps([auth, auth.onAuthStateChanged]);
-  } catch (user) {
-    yield put({
-      type: SIGN_IN_SUCCESS,
-      payload: { user }
-    });
+  while (true) {
+    const { user } = yield take(chan);
 
-    yield put(replace("/"));
+    if (user) {
+      yield put({
+        type: SIGN_IN_SUCCESS,
+        payload: { user }
+      });
+
+      yield put(replace("/"));
+    } else {
+      yield put({
+        type: SIGN_OUT_SUCCESS,
+        payload: { user }
+      });
+
+      yield put(push("/auth/signin"));
+    }
   }
 };
 
@@ -195,11 +209,13 @@ export const signOutSaga = function*() {
   try {
     yield call([auth, auth.signOut]);
 
+    /*
     yield put({
       type: SIGN_OUT_SUCCESS
     });
+    */
 
-    yield put(push("/auth/signin"));
+    // yield put(push("/auth/signin"));
   } catch (error) {
     console.log(error);
   }
